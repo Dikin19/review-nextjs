@@ -1,167 +1,84 @@
-"use client"
+import Link from "next/link"
 
-import { useEffect, useRef } from "react"
-import { motion } from "framer-motion"
-import { gsap } from "gsap"
-import { Button } from "@/components/ui/button"
-import { Star } from "lucide-react"
-import { heroData } from "@/lib/dummy-data"
+export async function HeroSection({ page = 1 }: { page?: number }) {
+  const limit = 5
+  const skip = (page - 1) * limit
 
-export function HeroSection() {
-  const coffeeCircleRef = useRef<HTMLDivElement>(null)
-  const floatingElementsRef = useRef<HTMLDivElement[]>([])
+  const res = await fetch(`https://dummyjson.com/users?limit=${limit}&skip=${skip}`, { cache: "no-store" })
+  if (!res.ok) {
+    throw new Error("Failed to fetch users")
+  }
+  const data: {
+    users: Array<{ id: number; firstName: string; lastName: string; image: string; email: string; username: string }>
+    total: number
+    skip: number
+    limit: number
+  } = await res.json()
 
-  useEffect(() => {
-    if (coffeeCircleRef.current) {
-      // Rotate coffee circle continuously
-      gsap.to(coffeeCircleRef.current, {
-        rotation: 360,
-        duration: 20,
-        repeat: -1,
-        ease: "none",
-      })
-    }
-
-    // Animate floating elements
-    floatingElementsRef.current.forEach((el, index) => {
-      if (el) {
-        gsap.to(el, {
-          y: -10,
-          duration: 2 + index * 0.5,
-          repeat: -1,
-          yoyo: true,
-          ease: "power2.inOut",
-        })
-      }
-    })
-  }, [])
+  const totalPages = Math.max(1, Math.ceil((data.total || 0) / limit))
+  const currentPage = Math.min(Math.max(1, page), totalPages)
 
   return (
     <section className="px-4 py-12 md:px-8 lg:px-12">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left Content */}
-          <motion.div
-            className="space-y-6"
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            data-aos="fade-right"
-          >
-            <motion.h1
-              className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-800 leading-tight"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              {heroData.title.split(" ").map((word, index) => (
-                <motion.span
-                  key={index}
-                  className={word === "coffee" ? "text-orange-500" : ""}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.1 * index }}
-                >
-                  {word}{" "}
-                </motion.span>
-              ))}
-            </motion.h1>
+      <div className="max-w-7xl mx-auto space-y-6">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-800">Users</h2>
 
-            <motion.p
-              className="text-gray-600 text-lg max-w-md"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              {heroData.subtitle}
-            </motion.p>
-
-            <motion.div
-              className="flex flex-col sm:flex-row gap-4"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-            >
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-full transition-all duration-300">
-                  Order now ☕
-                </Button>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  variant="ghost"
-                  className="text-orange-500 hover:text-orange-600 px-8 py-3 transition-all duration-300"
-                >
-                  More menu
-                </Button>
-              </motion.div>
-            </motion.div>
-          </motion.div>
-
-          {/* Right Content - Coffee Visual */}
-          <motion.div
-            className="relative flex justify-center lg:justify-end"
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            data-aos="fade-left"
-          >
-            <div className="relative">
-              {/* Main coffee circle */}
-              <motion.div
-                ref={coffeeCircleRef}
-                className="w-80 h-80 md:w-96 md:h-96 bg-gradient-to-br from-amber-900 to-amber-800 rounded-full flex items-center justify-center relative"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 1, delay: 0.5, ease: "backOut" }}
-              >
-                <motion.img
-                  src={heroData.mainImage}
-                  alt="Coffee Cup"
-                  className="w-48 h-48 md:w-56 md:h-56 object-cover rounded-full"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ duration: 0.8, delay: 0.8, ease: "backOut" }}
-                />
-
-                {/* Floating elements */}
-                <motion.div
-                  ref={(el) => el && (floatingElementsRef.current[0] = el)}
-                  className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-white px-4 py-2 rounded-full shadow-lg"
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 1 }}
-                  whileHover={{ scale: 1.1 }}
-                >
-                  <span className="text-gray-800 font-medium">{heroData.stats.featured}</span>
-                </motion.div>
-
-                <motion.div
-                  ref={(el) => el && (floatingElementsRef.current[1] = el)}
-                  className="absolute top-8 -right-4 bg-white px-3 py-2 rounded-full shadow-lg flex items-center gap-1"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.6, delay: 1.2 }}
-                  whileHover={{ scale: 1.1 }}
-                >
-                  <span className="text-gray-800 font-bold">{heroData.stats.rating}</span>
-                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                </motion.div>
-
-                <motion.div
-                  ref={(el) => el && (floatingElementsRef.current[2] = el)}
-                  className="absolute -bottom-4 left-8 bg-white px-4 py-2 rounded-full shadow-lg"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 1.4 }}
-                  whileHover={{ scale: 1.1 }}
-                >
-                  <span className="text-gray-800 font-bold">{heroData.stats.orders}</span>
-                </motion.div>
-              </motion.div>
-            </div>
-          </motion.div>
+        <div className="overflow-x-auto">
+          <div className="flex gap-4 min-w-max">
+            {data.users.map((user) => (
+              <div key={user.id} className="w-64 flex-shrink-0 bg-white rounded-xl shadow hover:shadow-md transition-shadow duration-200">
+                <div className="p-4 flex items-center gap-3">
+                  <img src={user.image} alt={`${user.firstName} ${user.lastName}`} className="w-14 h-14 rounded-full object-cover border" />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-gray-800 truncate">{user.firstName} {user.lastName}</p>
+                    <p className="text-sm text-gray-500 truncate">@{user.username}</p>
+                  </div>
+                </div>
+                <div className="px-4 pb-4">
+                  <p className="text-sm text-gray-600 truncate" title={user.email}>{user.email}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
+
+        <nav aria-label="Pagination" className="overflow-x-auto">
+          <ul className="flex items-center gap-2 min-w-max">
+            <li>
+              <Link
+                href={`/?page=${Math.max(1, currentPage - 1)}`}
+                className={`px-3 py-2 rounded border ${currentPage === 1 ? "pointer-events-none opacity-50" : "hover:bg-gray-50"}`}
+                prefetch={false}
+              >
+                Prev
+              </Link>
+            </li>
+            {Array.from({ length: totalPages }).map((_, idx) => {
+              const p = idx + 1
+              const isActive = p === currentPage
+              return (
+                <li key={p}>
+                  <Link
+                    href={`/?page=${p}`}
+                    className={`px-3 py-2 rounded border ${isActive ? "bg-orange-500 text-white border-orange-500" : "hover:bg-gray-50"}`}
+                    prefetch={false}
+                  >
+                    {p}
+                  </Link>
+                </li>
+              )
+            })}
+            <li>
+              <Link
+                href={`/?page=${Math.min(totalPages, currentPage + 1)}`}
+                className={`px-3 py-2 rounded border ${currentPage === totalPages ? "pointer-events-none opacity-50" : "hover:bg-gray-50"}`}
+                prefetch={false}
+              >
+                Next
+              </Link>
+            </li>
+          </ul>
+        </nav>
       </div>
     </section>
   )
